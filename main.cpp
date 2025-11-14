@@ -13,7 +13,17 @@ int main(int argc, char** argv) {
     }
     auto outputFile = parser->getOutputFile();
 
-    
+    Sudoku* sudoku;
+    try {
+        while ((sudoku = parser->getNextSudoku())) {
+            // TODO: coś tam z sudoku
+
+            delete sudoku;
+        }
+    }
+    catch (std::exception& e) {
+        std::cerr << e.what();
+    }
 
     fclose(outputFile);
     delete parser;

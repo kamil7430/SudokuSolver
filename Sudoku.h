@@ -7,11 +7,11 @@
 #include <cstdint>
 
 
-class sudoku {
+class Sudoku {
 private:
     uint64_t rows[9];
 public:
-    explicit sudoku(uint64_t rows[9]);
+    explicit Sudoku(uint64_t rows[9]);
     uint8_t getDigitAt(int row, int col);
 };
 

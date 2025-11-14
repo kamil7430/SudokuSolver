@@ -1,20 +1,28 @@
 #include "ArgsParser.h"
 
-#include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <fstream>
-#include <string>
+#include <stdexcept>
+
+void ArgsParser::throwIfUninitialized() const {
+    if (!initialized)
+        throw std::logic_error("Parser not initialized!");
+}
 
 ArgsParser::ArgsParser(int argc, char **argv) {
     this->argc = argc;
     this->argv = argv;
     this->initialized = false;
+    this->method = 'a';
+    this->sudokuCount = -1;
     this->currentLine = 0;
     this->inputFile = nullptr;
+    this->outputFile = nullptr;
 }
 
 ArgsParser::~ArgsParser() {
+    // I leave the output file open and believe that it'll be closed by user.
     fclose(inputFile);
 }
 
@@ -44,10 +52,16 @@ const char* ArgsParser::validateAndParseArgs() {
         return "Failed to open output file for writing!";
 
     this->initialized = true;
+    return nullptr;
+}
+
+Sudoku* ArgsParser::getNextSudoku() {
+    throwIfUninitialized();
+
+
 }
 
 FILE* ArgsParser::getOutputFile() const {
-    if (initialized)
-        return outputFile;
-    return nullptr;
+    throwIfUninitialized();
+    return outputFile;
 }

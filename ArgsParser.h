@@ -6,7 +6,7 @@
 #define SUDOKUSOLVER_ARGSPARSER_H
 
 #include <cwchar>
-#include "sudoku.h"
+#include "Sudoku.h"
 
 
 class ArgsParser {
@@ -19,11 +19,12 @@ private:
     int currentLine;
     FILE* inputFile;
     FILE* outputFile;
+    void throwIfUninitialized() const;
 public:
     ArgsParser(int argc, char** argv);
     ~ArgsParser();
     [[nodiscard]] const char* validateAndParseArgs();
-    [[nodiscard]] sudoku* getNextSudoku();
+    [[nodiscard]] Sudoku* getNextSudoku();
     [[nodiscard]] FILE* getOutputFile() const;
 };
 
