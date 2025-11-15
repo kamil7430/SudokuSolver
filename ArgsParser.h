@@ -7,7 +7,7 @@
 
 #include <cwchar>
 
-#include "Consts.h"
+#include "consts.h"
 #include "Sudoku.h"
 
 

@@ -6,12 +6,14 @@
 #define SUDOKUSOLVER_SUDOKU_H
 #include <cstdint>
 
+#include "Consts.h"
+
 
 class Sudoku {
 private:
-    uint64_t rows[9] = {};
+    uint64_t rows[Consts::SUDOKU_DIMENSION_SIZE] = {};
 public:
-    explicit Sudoku(const uint64_t rows[9]);
+    explicit Sudoku(const uint64_t rows[Consts::SUDOKU_DIMENSION_SIZE]);
     Sudoku() = default;
     [[nodiscard]] uint8_t getDigitAt(unsigned int row, unsigned int col) const;
     void setDigitAt(unsigned int row, unsigned int col, unsigned int digit);

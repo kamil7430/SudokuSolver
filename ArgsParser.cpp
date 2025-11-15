@@ -5,7 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "Consts.h"
+#include "consts.h"
 
 void ArgsParser::throwIfUninitialized() const {
     if (!initialized)
