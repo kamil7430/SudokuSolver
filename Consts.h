@@ -7,6 +7,7 @@
 
 namespace Consts {
     constexpr int SUDOKU_DIMENSION_SIZE = 9;
+    constexpr int SUDOKU_BOARD_SIZE = SUDOKU_DIMENSION_SIZE * SUDOKU_DIMENSION_SIZE;
 }
 
 #endif //SUDOKUSOLVER_GLOBAL_DEFINES_H

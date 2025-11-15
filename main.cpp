@@ -13,8 +13,8 @@ int main(int argc, char** argv) {
     }
     auto outputFile = parser->getOutputFile();
 
-    Sudoku* sudoku;
     try {
+        Sudoku* sudoku;
         while ((sudoku = parser->getNextSudoku())) {
             // TODO: coś tam z sudoku
 

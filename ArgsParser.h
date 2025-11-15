@@ -6,6 +6,8 @@
 #define SUDOKUSOLVER_ARGSPARSER_H
 
 #include <cwchar>
+
+#include "Consts.h"
 #include "Sudoku.h"
 
 
@@ -13,12 +15,13 @@ class ArgsParser {
 private:
     int argc;
     char** argv;
-    bool initialized;
-    char method;
-    int sudokuCount;
-    int currentLine;
-    FILE* inputFile;
-    FILE* outputFile;
+    bool initialized = false;
+    char method = 'a';
+    int totalSudokuCount = -1;
+    int sudokusParsed = 0;
+    char buffer[Consts::SUDOKU_BOARD_SIZE] = {};
+    FILE* inputFile = nullptr;
+    FILE* outputFile = nullptr;
     void throwIfUninitialized() const;
 public:
     ArgsParser(int argc, char** argv);
@@ -26,6 +29,7 @@ public:
     [[nodiscard]] const char* validateAndParseArgs();
     [[nodiscard]] Sudoku* getNextSudoku();
     [[nodiscard]] FILE* getOutputFile() const;
+    [[nodiscard]] char getMethod() const;
 };
 
 

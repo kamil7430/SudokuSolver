@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(SudokuSolver main.cpp
         ArgsParser.h
-        global_defines.h
+        Consts.h
         sudoku.h
         sudoku.cpp
         ArgsParser.cpp)

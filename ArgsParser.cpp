@@ -5,6 +5,8 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "Consts.h"
+
 void ArgsParser::throwIfUninitialized() const {
     if (!initialized)
         throw std::logic_error("Parser not initialized!");
@@ -13,12 +15,6 @@ void ArgsParser::throwIfUninitialized() const {
 ArgsParser::ArgsParser(int argc, char **argv) {
     this->argc = argc;
     this->argv = argv;
-    this->initialized = false;
-    this->method = 'a';
-    this->sudokuCount = -1;
-    this->currentLine = 0;
-    this->inputFile = nullptr;
-    this->outputFile = nullptr;
 }
 
 ArgsParser::~ArgsParser() {
@@ -39,8 +35,8 @@ const char* ArgsParser::validateAndParseArgs() {
     else
         return R"(Method should be "cpu" or "gpu"!)";
 
-    sudokuCount = atoi(argv[2]);
-    if (sudokuCount <= 0)
+    totalSudokuCount = atoi(argv[2]);
+    if (totalSudokuCount <= 0)
         return "Sudoku count is not valid!";
 
     inputFile = fopen(argv[3], "r");
@@ -58,10 +54,36 @@ const char* ArgsParser::validateAndParseArgs() {
 Sudoku* ArgsParser::getNextSudoku() {
     throwIfUninitialized();
 
+    auto throwInvalidFileFormat = []() -> void {
+        throw std::logic_error("Invalid input file format!");
+    };
 
+    if (sudokusParsed == totalSudokuCount)
+        return nullptr;
+
+    if (1 != fscanf(inputFile, "%s\r\n", buffer))
+        throwInvalidFileFormat();
+
+    auto sudoku = new Sudoku();
+    for (int i = 0; i < Consts::SUDOKU_DIMENSION_SIZE; i++) {
+        for (int j = 0; j < Consts::SUDOKU_DIMENSION_SIZE; j++) {
+            int val = buffer[i * Consts::SUDOKU_DIMENSION_SIZE + j] - '0';
+            if (val < 0 || val > 9)
+                throwInvalidFileFormat();
+            sudoku->setDigitAt(i, j, val);
+        }
+    }
+
+    sudokusParsed++;
+    return sudoku;
 }
 
 FILE* ArgsParser::getOutputFile() const {
     throwIfUninitialized();
     return outputFile;
+}
+
+char ArgsParser::getMethod() const {
+    throwIfUninitialized();
+    return method;
 }

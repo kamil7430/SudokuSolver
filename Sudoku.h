@@ -12,7 +12,9 @@ private:
     uint64_t rows[9];
 public:
     explicit Sudoku(uint64_t rows[9]);
+    Sudoku();
     uint8_t getDigitAt(int row, int col);
+    void setDigitAt(int row, int col, uint8_t digit);
 };
 
 
