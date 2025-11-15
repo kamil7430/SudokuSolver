@@ -17,7 +17,7 @@ uint8_t Sudoku::getDigitAt(unsigned int row, unsigned int col) const {
 
 void Sudoku::setDigitAt(unsigned int row, unsigned int col, unsigned int digit) {
     assert(row < 9 && col < 9);
-    assert(digit < 9);
+    assert(digit <= 9);
 
     rows[row] &= ~(0xF << (col << 2));
     rows[row] |= digit << (col << 2);
@@ -26,7 +26,11 @@ void Sudoku::setDigitAt(unsigned int row, unsigned int col, unsigned int digit) 
 void Sudoku::print() const {
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
-            printf("%d ", getDigitAt(i, j));
+            unsigned char digit = getDigitAt(i, j) + '0';
+            if (digit == '0')
+                digit = '.';
+            putc(digit, stdout);
+            putc(' ', stdout);
         }
         putc('\n', stdout);
     }
