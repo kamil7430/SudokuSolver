@@ -42,8 +42,9 @@ void setDigitAt(Sudoku* sudoku, const uint32_t sudokuNo, uint32_t row, uint32_t 
     assert(digit <= 9);
 
     if (row < 6) {
-        sudoku->rows[sudokuNo][row] &= ~(0xF << (20 + 4 * col));
-        sudoku->rows[sudokuNo][row] |= digit << (20 + 4 * col);
+        sudoku->rows[sudokuNo][row] &= ~(0xFULL << (20 + 4 * col));
+        sudoku->rows[sudokuNo][row] |= (long long)digit << (20 + 4 * col);
+        return;
     }
 
     // row >= 6 - transformation as above
@@ -54,8 +55,8 @@ void setDigitAt(Sudoku* sudoku, const uint32_t sudokuNo, uint32_t row, uint32_t 
         col -= 5;
     }
 
-    sudoku->rows[sudokuNo][row] &= ~(0xF << (4 * col));
-    sudoku->rows[sudokuNo][row] |= digit << (4 * col);
+    sudoku->rows[sudokuNo][row] &= ~(0xFULL << (4 * col));
+    sudoku->rows[sudokuNo][row] |= (long long)digit << (4 * col);
 }
 
 void printSudoku(const Sudoku* sudoku, const uint32_t sudokuNo) {
