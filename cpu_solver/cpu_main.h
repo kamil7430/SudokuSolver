@@ -8,16 +8,16 @@
 #include "cpu_solver.h"
 
 // Main function for solving sudokus on CPU
-int cpu_main(Sudoku sudoku) {
+int cpu_main(Sudoku* sudoku) {
     static int sudokuNo = 1;
     printf("### Solving sudoku %d ###\n", sudokuNo);
     int res = -1;
 
-    if (cpuPreprocessSudoku(&sudoku))
+    if (cpuPreprocessSudoku(sudoku))
         puts("This sudoku board is invalid!\n");
     else {
         int isSolved = 0;
-        const int result = cpuBruteforceSolveSudoku(&sudoku, &isSolved, 0, 0);
+        const int result = cpuBruteforceSolveSudoku(sudoku, &isSolved, 0, 0);
 
         if (result > 0) {
             puts("Sudoku solved!");

@@ -26,7 +26,7 @@ int main(const int argc, char** argv) {
 
         switch (parser.method) {
             case 'c':
-                result = cpu_main(sudoku);
+                result = cpu_main(&sudoku);
                 break;
             case 'g':
                 // TODO: GPU version
