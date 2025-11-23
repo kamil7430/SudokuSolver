@@ -50,11 +50,13 @@ int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
         j = 0;
     }
 
+    // We're out of sudoku bounds, so it is already solved
     if (i >= SUDOKU_DIMENSION_SIZE) {
         *solved = 1;
         return 1;
     }
 
+    // Find next empty cell and bruteforce it
     for (; i < SUDOKU_DIMENSION_SIZE; i++) {
         for (; j < SUDOKU_DIMENSION_SIZE; j++) {
             if (getDigitAt(sudoku, i, j) == 0) {
@@ -62,15 +64,14 @@ int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
 
                 int digit = 0;
                 while (digitsMask > 0) {
-                    int shift = __builtin_ffs(digitsMask);
+                    const int shift = __builtin_ffs(digitsMask);
                     digit += shift;
                     digitsMask >>= shift;
 
                     setDigitAndUpdateUsedDigits(sudoku, i, j, digit);
-                    cpuBruteforceSolveSudoku(sudoku, solved, i, j);
-                    if (*solved) {
+                    cpuBruteforceSolveSudoku(sudoku, solved, i, j + 1);
+                    if (*solved)
                         return 1;
-                    }
                     removeDigitAndUpdateUsedDigits(sudoku, i, j, digit);
                 }
 
@@ -80,6 +81,7 @@ int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
         j = 0;
     }
 
+    // We have looked through whole board and all cells are filled - that's it!
     *solved = 1;
     return 1;
 }

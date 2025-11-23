@@ -35,6 +35,7 @@ int main(const int argc, char** argv) {
         }
         if (int result = validateSudokuSolution(&sudoku)) {
             printf("Czy rozwiązanie jest prawidłowe: %d\n", result);
+            assert(result == 1);
         }
 
         printSudoku(&sudoku);
