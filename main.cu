@@ -23,7 +23,7 @@ int main(const int argc, char** argv) {
     int err;
     while ((err = getNextSudoku(&parser, &sudoku)) > 0) {
         // TODO: coś tam z sudoku
-        puts("-----\n");
+        puts("-----");
         printSudoku(&sudoku);
 
         if (cpuPreprocessSudoku(&sudoku))
@@ -33,8 +33,10 @@ int main(const int argc, char** argv) {
         if (int result = cpuBruteforceSolveSudoku(&sudoku, &solved, 0, 0)) {
             printf("Wynik działania: %d\n", result);
         }
+        if (int result = validateSudokuSolution(&sudoku)) {
+            printf("Czy rozwiązanie jest prawidłowe: %d\n", result);
+        }
 
-        puts("-----\n");
         printSudoku(&sudoku);
     }
     printGetNextSudokuErrorMessage(err);

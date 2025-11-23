@@ -84,6 +84,14 @@ uint16_t getPossibleDigitsAt(const Sudoku* sudoku, const uint32_t row, const uin
     return ~(sudoku->usedDigitsInRow[row] | sudoku->usedDigitsInCol[col] | getUsedDigitsInBoxConst(sudoku, row, col)) & NINE_BIT_MASK;
 }
 
+// Returns non-zero value if digit is possible, zero otherwise.
+int checkIfDigitIsPossible(const Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
+    assert(digit >= 1 && digit <= 9);
+
+    const uint16_t possible = getPossibleDigitsAt(sudoku, row, col);
+    return possible & ONE_BIT_MASK << (digit - 1);
+}
+
 void updateUsedDigitsAt(Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
     assert(digit >= 1 && digit <= 9);

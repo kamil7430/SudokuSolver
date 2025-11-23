@@ -55,11 +55,10 @@ int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
         return 1;
     }
 
-    Sudoku copy = *sudoku;
     for (; i < SUDOKU_DIMENSION_SIZE; i++) {
         for (; j < SUDOKU_DIMENSION_SIZE; j++) {
-            if (getDigitAt(&copy, i, j) == 0) {
-                uint16_t digitsMask = getPossibleDigitsAt(&copy, i, j);
+            if (getDigitAt(sudoku, i, j) == 0) {
+                uint16_t digitsMask = getPossibleDigitsAt(sudoku, i, j);
 
                 int digit = 0;
                 while (digitsMask > 0) {
@@ -67,13 +66,12 @@ int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
                     digit += shift;
                     digitsMask >>= shift;
 
-                    setDigitAndUpdateUsedDigits(&copy, i, j, digit);
-                    cpuBruteforceSolveSudoku(&copy, solved, i, j);
+                    setDigitAndUpdateUsedDigits(sudoku, i, j, digit);
+                    cpuBruteforceSolveSudoku(sudoku, solved, i, j);
                     if (*solved) {
-                        *sudoku = copy;
                         return 1;
                     }
-                    removeDigitAndUpdateUsedDigits(&copy, i, j, digit);
+                    removeDigitAndUpdateUsedDigits(sudoku, i, j, digit);
                 }
 
                 return -1;
@@ -83,7 +81,26 @@ int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
     }
 
     *solved = 1;
-    *sudoku = copy;
+    return 1;
+}
+
+// Naive sudoku validation for development purposes
+int validateSudokuSolution(const Sudoku* sudoku) {
+    Sudoku validator = {};
+
+    for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++)
+        for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
+            const uint32_t digit = getDigitAt(sudoku, i, j);
+
+            if (digit < 1 || digit > 9)
+                return -1;
+
+            if (checkIfDigitIsPossible(&validator, i, j, digit) <= 0)
+                return -1;
+
+            setDigitAndUpdateUsedDigits(&validator, i, j, digit);
+        }
+
     return 1;
 }
 
