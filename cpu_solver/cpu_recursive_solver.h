@@ -2,8 +2,8 @@
 // Created by kamil on 20.11.2025.
 //
 
-#ifndef SUDOKUSOLVERCUDA_CPU_SOLVER_H
-#define SUDOKUSOLVERCUDA_CPU_SOLVER_H
+#ifndef SUDOKUSOLVERCUDA_CPU_RECURSIVE_SOLVER_H
+#define SUDOKUSOLVERCUDA_CPU_RECURSIVE_SOLVER_H
 #include "../sudoku.h"
 
 int cpuPreprocessSudoku(Sudoku* sudoku) {
@@ -41,7 +41,7 @@ int cpuPreprocessSudoku(Sudoku* sudoku) {
     return 0;
 }
 
-int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
+int cpuRecursiveBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
     if (*solved)
         return 1;
 
@@ -69,7 +69,7 @@ int cpuBruteforceSolveSudoku(Sudoku* sudoku, int* solved, int i, int j) {
                     digitsMask >>= shift;
 
                     setDigitAndUpdateUsedDigits(sudoku, i, j, digit);
-                    cpuBruteforceSolveSudoku(sudoku, solved, i, j + 1);
+                    cpuRecursiveBruteforceSolveSudoku(sudoku, solved, i, j + 1);
                     if (*solved)
                         return 1;
                     removeDigitAndUpdateUsedDigits(sudoku, i, j, digit);
@@ -106,4 +106,4 @@ int validateSudokuSolution(const Sudoku* sudoku) {
     return 1;
 }
 
-#endif //SUDOKUSOLVERCUDA_CPU_SOLVER_H
+#endif //SUDOKUSOLVERCUDA_CPU_RECURSIVE_SOLVER_H
