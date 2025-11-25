@@ -6,6 +6,7 @@
 #define SUDOKUSOLVERCUDA_GPU_SOLVER_CUH
 
 #include "../sudoku.h"
+#include <cuda_runtime.h>
 
 __global__ void oneThreadOneSudokuKernel(Sudoku* sudokus, const int sudokuCount) {
     // Prepare data structures for bruteforce

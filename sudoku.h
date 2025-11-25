@@ -23,19 +23,19 @@ typedef struct {
     uint16_t usedDigitsInBox[3][3];
 } Sudoku;
 
-inline uint16_t getUsedDigitsInBoxConst(const Sudoku* sudoku, const uint32_t row, const uint32_t col) {
+inline __host__ __device__ uint16_t getUsedDigitsInBoxConst(const Sudoku* sudoku, const uint32_t row, const uint32_t col) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
 
     return sudoku->usedDigitsInBox[row / 3][col / 3];
 }
 
-inline uint16_t* getUsedDigitsInBoxPointer(Sudoku* sudoku, const uint32_t row, const uint32_t col) {
+inline __host__ __device__ uint16_t* getUsedDigitsInBoxPointer(Sudoku* sudoku, const uint32_t row, const uint32_t col) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
 
     return &sudoku->usedDigitsInBox[row / 3][col / 3];
 }
 
-uint32_t getDigitAt(const Sudoku* sudoku, uint32_t row, uint32_t col) {
+__host__ __device__ uint32_t getDigitAt(const Sudoku* sudoku, uint32_t row, uint32_t col) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
 
     if (row < 6)
@@ -56,7 +56,7 @@ uint32_t getDigitAt(const Sudoku* sudoku, uint32_t row, uint32_t col) {
     return sudoku->rows[row] >> (4 * col) & FOUR_BIT_MASK;
 }
 
-void setDigitAt(Sudoku* sudoku, uint32_t row, uint32_t col, const uint32_t digit) {
+__host__ __device__ void setDigitAt(Sudoku* sudoku, uint32_t row, uint32_t col, const uint32_t digit) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
     assert(digit <= 9);
 
@@ -78,21 +78,21 @@ void setDigitAt(Sudoku* sudoku, uint32_t row, uint32_t col, const uint32_t digit
     sudoku->rows[row] |= (uint64_t)digit << (4 * col);
 }
 
-uint16_t getPossibleDigitsAt(const Sudoku* sudoku, const uint32_t row, const uint32_t col) {
+__host__ __device__ uint16_t getPossibleDigitsAt(const Sudoku* sudoku, const uint32_t row, const uint32_t col) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
 
     return ~(sudoku->usedDigitsInRow[row] | sudoku->usedDigitsInCol[col] | getUsedDigitsInBoxConst(sudoku, row, col)) & NINE_BIT_MASK;
 }
 
 // Returns non-zero value if digit is possible, zero otherwise.
-int checkIfDigitIsPossible(const Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
+__host__ __device__ int checkIfDigitIsPossible(const Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
     assert(digit >= 1 && digit <= 9);
 
     const uint16_t possible = getPossibleDigitsAt(sudoku, row, col);
     return possible & ONE_BIT_MASK << (digit - 1);
 }
 
-void updateUsedDigitsAt(Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
+__host__ __device__ void updateUsedDigitsAt(Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
     assert(digit >= 1 && digit <= 9);
 
@@ -102,7 +102,7 @@ void updateUsedDigitsAt(Sudoku* sudoku, const uint32_t row, const uint32_t col, 
     *getUsedDigitsInBoxPointer(sudoku, row, col) |= mask;
 }
 
-void removeFromUsedDigitsAt(Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
+__host__ __device__ void removeFromUsedDigitsAt(Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
     assert(row < SUDOKU_DIMENSION_SIZE && col < SUDOKU_DIMENSION_SIZE);
     assert(digit >= 1 && digit <= 9);
 
@@ -112,12 +112,12 @@ void removeFromUsedDigitsAt(Sudoku* sudoku, const uint32_t row, const uint32_t c
     *getUsedDigitsInBoxPointer(sudoku, row, col) &= mask;
 }
 
-void setDigitAndUpdateUsedDigits(Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
+__host__ __device__ void setDigitAndUpdateUsedDigits(Sudoku* sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
     setDigitAt(sudoku, row, col, digit);
     updateUsedDigitsAt(sudoku, row, col, digit);
 }
 
-void removeDigitAndUpdateUsedDigits(Sudoku *sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
+__host__ __device__ void removeDigitAndUpdateUsedDigits(Sudoku *sudoku, const uint32_t row, const uint32_t col, const uint32_t digit) {
     setDigitAt(sudoku, row, col, 0);
     removeFromUsedDigitsAt(sudoku, row, col, digit);
 }

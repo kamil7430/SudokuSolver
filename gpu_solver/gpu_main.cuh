@@ -14,19 +14,19 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
 
     // Allocate the device input sudokus
     const unsigned int sudokus_size = sudokuCount * sizeof(Sudoku);
-    Sudoku *device_sudokus;
+    Sudoku* device_sudokus;
 
     err = cudaMalloc((void **)&device_sudokus, sudokus_size);
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to allocate device sudokus (error code %s)!\n", cudaGetErrorString(err));
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     // Copy the host input sudokus in host memory to the device memory
     err = cudaMemcpy(device_sudokus, sudokus, sudokus_size, cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to copy sudokus from host to device (error code %s)!\n", cudaGetErrorString(err));
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     // Launch the CUDA Kernel
@@ -38,7 +38,7 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     err = cudaGetLastError();
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to launch oneThreadOneSudokuKernel kernel (error code %s)!\n", cudaGetErrorString(err));
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     // Copy the device result sudokus in device memory to the host result sudokus
@@ -47,14 +47,14 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     err = cudaMemcpy(sudokus, device_sudokus, sudokus_size, cudaMemcpyDeviceToHost);
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to copy vector C from device to host (error code %s)!\n", cudaGetErrorString(err));
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     // Free device global memory
     err = cudaFree(device_sudokus);
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to free device sudokus (error code %s)!\n", cudaGetErrorString(err));
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     printf("Done\n");
