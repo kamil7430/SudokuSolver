@@ -23,6 +23,7 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     }
 
     // Copy the host input sudokus in host memory to the device memory
+    printf("Copy input data from the host memory to the CUDA device \n");
     err = cudaMemcpy(device_sudokus, sudokus, sudokus_size, cudaMemcpyHostToDevice);
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to copy sudokus from host to device (error code %s)!\n", cudaGetErrorString(err));
@@ -38,6 +39,12 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     err = cudaGetLastError();
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to launch oneThreadOneSudokuKernel kernel (error code %s)!\n", cudaGetErrorString(err));
+        return 1;
+    }
+
+    err = cudaDeviceSynchronize();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "Execution failed (error code %s)!\n", cudaGetErrorString(err));
         return 1;
     }
 
@@ -57,7 +64,7 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
         return 1;
     }
 
-    printf("Done\n");
+    printf("CUDA execution finished!\n");
     return 0;
 }
 

@@ -46,7 +46,7 @@ int main(const int argc, char** argv) {
 
         int err, id = 0;
         while ((err = getNextSudoku(&parser, &sudokus[id])) > 0)
-            ;
+            id++;
         if (err < 0) {
             printGetNextSudokuErrorMessage(err);
             fclose(parser.inputFile);

@@ -14,3 +14,10 @@ add_executable(SudokuSolverCuda main.cu
 
 set_target_properties(SudokuSolverCuda PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON)
+
+target_compile_options(SudokuSolverCuda PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:
+            -lineinfo
+            -Xptxas=-v
+        >
+)
