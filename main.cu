@@ -56,6 +56,12 @@ int main(const int argc, char** argv) {
 
         gpu_main(sudokus, parser.totalSudokuCount);
 
+        for (int i = 0; i < parser.totalSudokuCount; i++) {
+            if (validateSudokuSolution(&sudokus[i]) < 0) {
+                puts("Invalid solution!\n");
+            }
+        }
+
         free(sudokus);
     }
     else {

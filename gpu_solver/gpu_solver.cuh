@@ -8,7 +8,42 @@
 #include "../sudoku.h"
 #include <cuda_runtime.h>
 
-__global__ void oneThreadOneSudokuKernel(Sudoku* sudokus, const int sudokuCount) {
+int __device__ gpuPreprocessSudoku(Sudoku* sudoku) {
+    for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
+        for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
+            const uint32_t digit = getDigitAt(sudoku, i, j);
+
+            if (digit != 0) {
+                const uint16_t possible = getPossibleDigitsAt(sudoku, i, j);
+                if (possible >> (digit - 1) & ONE_BIT_MASK == 0)
+                    return -1;
+
+                updateUsedDigitsAt(sudoku, i, j, digit);
+            }
+        }
+    }
+
+    int restart = 0;
+    for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++)
+        for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
+            if (getDigitAt(sudoku, i, j) != 0)
+                continue;
+
+            int digits = getPossibleDigitsAt(sudoku, i, j) & NINE_BIT_MASK;
+
+            if (__popc(digits) == 1) {
+                setDigitAndUpdateUsedDigits(sudoku, i, j, __ffs(digits));
+                restart = 1;
+            }
+        }
+
+    if (restart)
+        return gpuPreprocessSudoku(sudoku);
+
+    return 0;
+}
+
+__global__ void oneThreadOneSudokuKernel(Sudoku *sudokus, const int sudokuCount) {
     // Prepare data structures for bruteforce
     // empty_indices format: xxxxyyyy (8 bits):
     // xxxx - row (i)
@@ -20,6 +55,8 @@ __global__ void oneThreadOneSudokuKernel(Sudoku* sudokus, const int sudokuCount)
     if (threadNumber >= sudokuCount)
         return;
     Sudoku sudoku = sudokus[threadNumber];
+
+    gpuPreprocessSudoku(&sudoku);
 
     // Find all empty cells
     for (uint8_t i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
@@ -53,8 +90,7 @@ __global__ void oneThreadOneSudokuKernel(Sudoku* sudokus, const int sudokuCount)
         if (digitsMask == 0) {
             // No possible digits - backtracking
             stack_idx--;
-        }
-        else {
+        } else {
             const int shift = __ffs(digitsMask);
             const int digit = previousDigit + shift;
             setDigitAndUpdateUsedDigits(&sudoku, row, col, digit);
@@ -68,6 +104,8 @@ __global__ void oneThreadOneSudokuKernel(Sudoku* sudokus, const int sudokuCount)
 
     // Return solution
     sudokus[threadNumber] = sudoku;
+
+    // printf("Thread #%d finished!\n", threadNumber);
 }
 
 #endif //SUDOKUSOLVERCUDA_GPU_SOLVER_CUH
