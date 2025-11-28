@@ -42,6 +42,7 @@ int main(const int argc, char** argv) {
     }
 
     if (parser.method == 'c') {
+        puts("Begin CPU sudoku solving!");
         const clock_t startCpuSolving = clock();
 
         cpu_main(sudokus, parser.totalSudokuCount);
@@ -61,6 +62,10 @@ int main(const int argc, char** argv) {
     }
     else {
         puts("Invalid parser method!\n");
+    }
+
+    for (int i = 0; i < parser.totalSudokuCount; i++) {
+        printSudoku(&sudokus[i], outputFile, 0);
     }
 
     free(sudokus);

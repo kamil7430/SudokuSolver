@@ -24,7 +24,7 @@ int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku) {
             for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
                 for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
                     if (getDigitAt(sudoku, i, j) == 0) {
-                        int possibleDigits = __builtin_popcount(getPossibleDigitsAt(sudoku, i, j));
+                        const int possibleDigits = __builtin_popcount(getPossibleDigitsAt(sudoku, i, j));
                         if (possibleDigits < minPossibleDigits) {
                             minPossibleDigits = possibleDigits;
                             row = i;
@@ -45,7 +45,7 @@ int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku) {
         }
 
         // Clean up previous iteration (if occurred)
-        uint8_t previousDigit = getDigitAt(sudoku, row, col);
+        const uint8_t previousDigit = getDigitAt(sudoku, row, col);
         if (previousDigit != 0)
             removeDigitAndUpdateUsedDigits(sudoku, row, col, previousDigit);
 
@@ -75,6 +75,65 @@ int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku) {
     }
 
     return -1;
+}
+
+int cpuPreprocessSudoku(Sudoku* sudoku) {
+    // Update used digits in Sudoku struct
+    for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
+        for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
+            const uint32_t digit = getDigitAt(sudoku, i, j);
+
+            if (digit != 0) {
+                const uint16_t possible = getPossibleDigitsAt(sudoku, i, j);
+
+                // Looking for a contradiction
+                if (possible >> (digit - 1) & ONE_BIT_MASK == 0)
+                    return -1;
+
+                updateUsedDigitsAt(sudoku, i, j, digit);
+            }
+        }
+    }
+
+    // Filling cells for which there is only one possible digit
+    int restart = 0;
+    for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++)
+        for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
+            if (getDigitAt(sudoku, i, j) != 0)
+                continue;
+
+            const int digits = getPossibleDigitsAt(sudoku, i, j) & NINE_BIT_MASK;
+
+            if (__builtin_popcount(digits) == 1) {
+                setDigitAndUpdateUsedDigits(sudoku, i, j, __builtin_ffs(digits));
+                restart = 1;
+            }
+        }
+
+    if (restart)
+        return cpuPreprocessSudoku(sudoku);
+
+    return 0;
+}
+
+// Naive sudoku validation for development and testing purposes
+int validateSudokuSolution(const Sudoku* sudoku) {
+    Sudoku validator = {};
+
+    for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++)
+        for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
+            const uint32_t digit = getDigitAt(sudoku, i, j);
+
+            if (digit < 1 || digit > 9)
+                return -1;
+
+            if (checkIfDigitIsPossible(&validator, i, j, digit) <= 0)
+                return -1;
+
+            setDigitAndUpdateUsedDigits(&validator, i, j, digit);
+        }
+
+    return 1;
 }
 
 #endif //SUDOKUSOLVERCUDA_CPU_ITERATIVE_SOLVER_H

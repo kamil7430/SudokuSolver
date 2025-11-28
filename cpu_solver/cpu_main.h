@@ -6,7 +6,6 @@
 #define SUDOKUSOLVERCUDA_CPU_MAIN_H
 
 #include "cpu_iterative_solver.h"
-#include "cpu_recursive_solver.h"
 
 // Main function for solving sudokus on CPU
 void cpu_main(Sudoku* sudokus, const int sudokuCount) {
@@ -14,8 +13,10 @@ void cpu_main(Sudoku* sudokus, const int sudokuCount) {
         printf("### Solving sudoku %d ###\n", i);
 
         Sudoku* sudoku = &sudokus[i];
-        if (cpuPreprocessSudoku(sudoku))
+        if (cpuPreprocessSudoku(sudoku)) {
             puts("This sudoku board is invalid!\n");
+            memset(sudoku->rows, 0, 6 * sizeof(uint64_t));
+        }
         else {
             const int result = cpuIterativeBruteforceSolveSudoku(sudoku);
 
