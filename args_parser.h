@@ -49,7 +49,7 @@ const char* validateAndParseArgs(const int argc, char** argv, ArgsParser* parser
     return NULL;
 }
 
-int getNextSudoku(ArgsParser* parser, Sudoku* sudoku, const int sudokuNo) {
+int getNextSudoku(ArgsParser* parser, Sudoku* sudoku) {
     if (!parser->initialized)
         return -1;
 
@@ -60,13 +60,15 @@ int getNextSudoku(ArgsParser* parser, Sudoku* sudoku, const int sudokuNo) {
     if (1 != fscanf(parser->inputFile, "%s\r\n", parser->buffer))
         return -2;
 
+    memset(sudoku, 0, sizeof(Sudoku));
+
     for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
         for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
             const int val = parser->buffer[i * SUDOKU_DIMENSION_SIZE + j] - '0';
             if (val < 0 || val > 9)
                 return -2;
             if (val > 0)
-                setDigitAt(sudoku, sudokuNo, i, j, val);
+                setDigitAt(sudoku, i, j, val);
         }
     }
 

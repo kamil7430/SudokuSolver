@@ -20,7 +20,7 @@ int main(const int argc, char** argv) {
     }
     FILE* outputFile = parser.outputFile;
 
-    const unsigned int sudokus_size = (parser.totalSudokuCount / SUDOKUS_PER_STRUCT + 1) * sizeof(Sudoku);
+    const unsigned int sudokus_size = parser.totalSudokuCount * sizeof(Sudoku);
     Sudoku* sudokus = (Sudoku*)malloc(sudokus_size);
     if (sudokus == NULL) {
         fputs("Failed to allocate host memory with malloc!\n", stderr);
@@ -32,7 +32,7 @@ int main(const int argc, char** argv) {
     memset(sudokus, 0, sudokus_size);
 
     int err, id = 0;
-    while ((err = getNextSudoku(&parser, &sudokus[id / SUDOKUS_PER_STRUCT], id % SUDOKUS_PER_STRUCT)) > 0)
+    while ((err = getNextSudoku(&parser, &sudokus[id])) > 0)
         id++;
     if (err < 0) {
         printGetNextSudokuErrorMessage(err);
@@ -52,19 +52,15 @@ int main(const int argc, char** argv) {
     else if (parser.method == 'g') {
         if (gpu_main(sudokus, parser.totalSudokuCount) <= 0) {
             for (int i = 0; i < parser.totalSudokuCount; i++) {
-                if (validateSudokuSolution(&sudokus[i / SUDOKUS_PER_STRUCT], i % SUDOKUS_PER_STRUCT) < 0) {
+                if (validateSudokuSolution(&sudokus[i]) < 0) {
                     printf("Invalid solution for %d!\n", i);
-                    printSudoku(&sudokus[i / SUDOKUS_PER_STRUCT], i % SUDOKUS_PER_STRUCT, stdout, 1);
+                    printSudoku(&sudokus[i], stdout, 1);
                 }
             }
         }
     }
     else {
         puts("Invalid parser method!\n");
-    }
-
-    for (int i = 0; i < parser.totalSudokuCount; i++) {
-        printSudoku(&sudokus[i / SUDOKUS_PER_STRUCT], i % SUDOKUS_PER_STRUCT, outputFile, 0);
     }
 
     free(sudokus);

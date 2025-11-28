@@ -11,32 +11,29 @@
 // Main function for solving sudokus on CPU
 void cpu_main(Sudoku* sudokus, const int sudokuCount) {
     for (int i = 0; i < sudokuCount; i++) {
-        Sudoku* sudoku = &sudokus[i / SUDOKUS_PER_STRUCT];
-        const int sudokuNo = i % SUDOKUS_PER_STRUCT;
+        printf("### Solving sudoku %d ###\n", i);
 
-        printf("### Solving sudoku %d/%03d ###\n", i / SUDOKUS_PER_STRUCT, sudokuNo);
-
-        if (cpuPreprocessSudoku(sudoku, sudokuNo))
+        Sudoku* sudoku = &sudokus[i];
+        if (cpuPreprocessSudoku(sudoku))
             puts("This sudoku board is invalid!\n");
         else {
-            const int result = cpuIterativeBruteforceSolveSudoku(sudoku, sudokuNo);
+            const int result = cpuIterativeBruteforceSolveSudoku(sudoku);
 
             if (result > 0) {
                 puts("Sudoku solved!");
 
-                // if (const int validationResult = validateSudokuSolution(sudoku, sudokuNo)) {
-                //     printf("Is solution valid: %d\n", validationResult);
-                //     assert(validationResult == 1);
+                // if (const int result = validateSudokuSolution(sudoku)) {
+                //     printf("Is solution valid: %d\n", result);
+                //     // printSudoku(sudoku, stdout, 1);
+                //     assert(result == 1);
                 // }
             }
             else {
-                memset(sudoku->rows[sudokuNo], 0, 6 * sizeof(uint64_t));
-                puts("This sudoku is invalid!");
+                puts("This sudoku is invalid! Setting output to zeros.");
+                memset(sudoku->rows, 0, 6 * sizeof(uint64_t));
+                // assert("Invalid sudoku!");
             }
         }
-
-        // printSudoku(sudoku, sudokuNo, stdout, 1);
-        // puts("");
     }
 }
 

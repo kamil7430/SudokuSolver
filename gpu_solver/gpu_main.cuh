@@ -8,33 +8,39 @@
 #include "gpu_solver.cuh"
 #include <time.h>
 
-void performFirstThreeStepsOfRecursion(Sudoku* sudoku, Sudoku* outSudoku, const int sudokuNo, int depth, int i, int j, int* offset) {
+void performFirstFewStepsOfRecursion(Sudoku* sudoku, Sudoku* outSudoku, int depth, int i, int j, int* offset) {
     if (depth == 3) {
-        copySudoku(outSudoku, *offset, sudoku, sudokuNo);
+        outSudoku[*offset] = *sudoku;
         (*offset)++;
         return;
     }
 
-    for (; i < SUDOKU_DIMENSION_SIZE; i++) {
-        for (; j < SUDOKU_DIMENSION_SIZE; j++) {
-            if (getDigitAt(sudoku, sudokuNo, i, j) == 0) {
-                uint16_t digitsMask = getPossibleDigitsAt(sudoku, sudokuNo, i, j);
-
-                int digit = 0;
-                while (digitsMask > 0) {
-                    const int shift = __builtin_ffs(digitsMask);
-                    digit += shift;
-                    digitsMask >>= shift;
-
-                    setDigitAndUpdateUsedDigits(sudoku, sudokuNo, i, j, digit);
-                    performFirstThreeStepsOfRecursion(sudoku, outSudoku, sudokuNo, depth + 1, i, j + 1, offset);
-                    removeDigitAndUpdateUsedDigits(sudoku, sudokuNo, i, j, digit);
+    int minPossibleDigits = 10;
+    int row = 0, col = 0;
+    for (i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
+        for (j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
+            if (getDigitAt(sudoku, i, j) == 0) {
+                const int possibleDigits = __builtin_popcount(getPossibleDigitsAt(sudoku, i, j));
+                if (possibleDigits < minPossibleDigits) {
+                    minPossibleDigits = possibleDigits;
+                    row = i;
+                    col = j;
                 }
-
-                return;
             }
         }
-        j = 0;
+    }
+
+    uint16_t digitsMask = getPossibleDigitsAt(sudoku, row, col);
+
+    int digit = 0;
+    while (digitsMask > 0) {
+        const int shift = __builtin_ffs(digitsMask);
+        digit += shift;
+        digitsMask >>= shift;
+
+        setDigitAndUpdateUsedDigits(sudoku, row, col, digit);
+        performFirstFewStepsOfRecursion(sudoku, outSudoku, depth + 1, row, col + 1, offset);
+        removeDigitAndUpdateUsedDigits(sudoku, row, col, digit);
     }
 }
 
@@ -42,7 +48,7 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     clock_t preprocessingStart = clock();
 
     for (int i = 0; i < sudokuCount; i++) {
-        cpuPreprocessSudoku(&sudokus[i / SUDOKUS_PER_STRUCT], i % SUDOKUS_PER_STRUCT);
+        cpuPreprocessSudoku(&sudokus[i]);
     }
 
     // Base: https://github.com/NVIDIA/cuda-samples/blob/master/Samples/0_Introduction/vectorAdd/vectorAdd.cu
@@ -50,12 +56,12 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     cudaError_t err = cudaSuccess;
 
     // Declare kernel parameters
-    constexpr int threadsPerBlock = SUDOKUS_PER_STRUCT;
+    constexpr int threadsPerBlock = 256;
     const int blocks = sudokuCount;
 
     // Allocate the device input sudokus
-    const unsigned int input_sudokus_size = sudokuCount * sizeof(Sudoku);
-    const unsigned int output_sudokus_size = (sudokuCount / SUDOKUS_PER_STRUCT + 1) * sizeof(Sudoku);
+    const unsigned int output_sudokus_size = sudokuCount * sizeof(Sudoku);
+    const unsigned int input_sudokus_size = output_sudokus_size * threadsPerBlock;
     Sudoku* device_input_sudokus;
     Sudoku* device_output_sudokus;
     int* device_preprocessed_sudokus_count;
@@ -65,8 +71,12 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     int* preprocessed_sudokus_count = (int*)malloc(psc_size);
     for (int i = 0; i < sudokuCount; i++) {
         preprocessed_sudokus_count[i] = 0;
-        performFirstThreeStepsOfRecursion(&sudokus[i / SUDOKUS_PER_STRUCT], &preprocessed_sudokus[i],
-            i % SUDOKUS_PER_STRUCT, 0, 0, 0, &preprocessed_sudokus_count[i]);
+        performFirstFewStepsOfRecursion(&sudokus[i], preprocessed_sudokus + i * threadsPerBlock, 0, 0, 0, &preprocessed_sudokus_count[i]);
+        // printf("%d\n", preprocessed_sudokus_count[i]);
+        // for (int j = 0; j < preprocessed_sudokus_count[i]; j++) {
+        //     printSudoku(preprocessed_sudokus + i * threadsPerBlock + j, stdout, 1);
+        //     putc('\n', stdout);
+        // }
     }
 
     clock_t preprocessingEnd = clock();
@@ -116,7 +126,7 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
 
     // Launch the CUDA Kernel
     printf("CUDA kernel launch with %d blocks of %d threads\n", blocks, threadsPerBlock);
-    oneBlockOneSudokuKernel<<<blocks, threadsPerBlock>>>(device_input_sudokus, sudokuCount, device_output_sudokus, device_preprocessed_sudokus_count);
+    oneBlockOneSudokuKernel<<<blocks, threadsPerBlock>>>(device_input_sudokus, device_output_sudokus, device_preprocessed_sudokus_count);
 
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
