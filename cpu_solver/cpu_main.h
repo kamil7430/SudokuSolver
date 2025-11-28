@@ -7,21 +7,25 @@
 
 #include "cpu_iterative_solver.h"
 
+#define PRINTING_INTERVAL 1000
+
 // Main function for solving sudokus on CPU
 void cpu_main(Sudoku* sudokus, const int sudokuCount) {
     for (int i = 0; i < sudokuCount; i++) {
-        printf("### Solving sudoku %d ###\n", i);
+        if (i % PRINTING_INTERVAL == 0) {
+            printf("### Solving sudoku %d ###\n", i);
+        }
 
         Sudoku* sudoku = &sudokus[i];
         if (cpuPreprocessSudoku(sudoku)) {
-            puts("This sudoku board is invalid!\n");
+            printf("Sudoku board %d is invalid!\n", i);
             memset(sudoku->rows, 0, 6 * sizeof(uint64_t));
         }
         else {
             const int result = cpuIterativeBruteforceSolveSudoku(sudoku);
 
             if (result > 0) {
-                puts("Sudoku solved!");
+                // puts("Sudoku solved!");
 
                 // if (const int result = validateSudokuSolution(sudoku)) {
                 //     printf("Is solution valid: %d\n", result);
@@ -30,7 +34,7 @@ void cpu_main(Sudoku* sudokus, const int sudokuCount) {
                 // }
             }
             else {
-                puts("This sudoku is invalid! Setting output to zeros.");
+                printf("Sudoku %d is invalid! Setting output to zeros.\n", i);
                 memset(sudoku->rows, 0, 6 * sizeof(uint64_t));
                 // assert("Invalid sudoku!");
             }
