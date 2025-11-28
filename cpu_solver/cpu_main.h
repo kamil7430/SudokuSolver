@@ -9,33 +9,33 @@
 #include "cpu_recursive_solver.h"
 
 // Main function for solving sudokus on CPU
-int cpu_main(Sudoku* sudoku) {
-    static int sudokuNo = 1;
-    printf("### Solving sudoku %d ###\n", sudokuNo);
-    int res = -1;
+void cpu_main(Sudoku* sudokus, const int sudokuCount) {
+    for (int i = 0; i < sudokuCount; i++) {
+        Sudoku* sudoku = &sudokus[i / SUDOKUS_PER_STRUCT];
+        const int sudokuNo = i % SUDOKUS_PER_STRUCT;
 
-    if (cpuPreprocessSudoku(sudoku))
-        puts("This sudoku board is invalid!\n");
-    else {
-        // int isSolved = 0;
-        // const int result = cpuRecursiveBruteforceSolveSudoku(sudoku, &isSolved, 0, 0);
-        const int result = cpuIterativeBruteforceSolveSudoku(sudoku);
+        printf("### Solving sudoku %d/%03d ###\n", i / SUDOKUS_PER_STRUCT, sudokuNo);
 
-        if (result > 0) {
-            puts("Sudoku solved!");
-            res = 1;
+        if (cpuPreprocessSudoku(sudoku, sudokuNo))
+            puts("This sudoku board is invalid!\n");
+        else {
+            const int result = cpuIterativeBruteforceSolveSudoku(sudoku, sudokuNo);
 
-            // if (const int result = validateSudokuSolution(sudoku)) {
-            //     printf("Is solution valid: %d\n", result);
-            //     // assert(result == 1);
-            // }
+            if (result > 0) {
+                puts("Sudoku solved!");
+
+                // if (const int validationResult = validateSudokuSolution(sudoku, sudokuNo)) {
+                //     printf("Is solution valid: %d\n", validationResult);
+                //     assert(validationResult == 1);
+                // }
+            }
+            else
+                puts("This sudoku is invalid!");
         }
-        else
-            puts("This sudoku is invalid!");
-    }
 
-    sudokuNo++;
-    return res;
+        // printSudoku(sudoku, sudokuNo, stdout, 1);
+        // puts("");
+    }
 }
 
 #endif //SUDOKUSOLVERCUDA_CPU_MAIN_H

@@ -6,7 +6,7 @@
 #define SUDOKUSOLVERCUDA_CPU_ITERATIVE_SOLVER_H
 #include "../sudoku.h"
 
-int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku) {
+int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku, const int sudokuNo) {
     // Prepare data structures for bruteforce
     // empty_indices format: xxxxyyyy (8 bits):
     // xxxx - row (i)
@@ -17,7 +17,7 @@ int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku) {
     // Find all empty cells
     for (uint8_t i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
         for (uint8_t j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
-            if (getDigitAt(sudoku, i, j) == 0) {
+            if (getDigitAt(sudoku, sudokuNo, i, j) == 0) {
                 empty_indices[empty_count] = (i << 4) | j;
                 empty_count++;
             }
@@ -33,12 +33,12 @@ int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku) {
         uint8_t col = empty_cell_position & 0xF;
 
         // Clean up previous iteration (if occurred)
-        uint8_t previousDigit = getDigitAt(sudoku, row, col);
+        uint8_t previousDigit = getDigitAt(sudoku, sudokuNo, row, col);
         if (previousDigit != 0)
-            removeDigitAndUpdateUsedDigits(sudoku, row, col, previousDigit);
+            removeDigitAndUpdateUsedDigits(sudoku, sudokuNo, row, col, previousDigit);
 
         // Bruteforce every digit
-        uint16_t digitsMask = getPossibleDigitsAt(sudoku, row, col);
+        uint16_t digitsMask = getPossibleDigitsAt(sudoku, sudokuNo, row, col);
 
         // If it's not first try for this cell, shift the possible digits mask
         digitsMask >>= previousDigit;
@@ -50,7 +50,7 @@ int cpuIterativeBruteforceSolveSudoku(Sudoku* sudoku) {
         else {
             const int shift = __builtin_ffs(digitsMask);
             const int digit = previousDigit + shift;
-            setDigitAndUpdateUsedDigits(sudoku, row, col, digit);
+            setDigitAndUpdateUsedDigits(sudoku, sudokuNo, row, col, digit);
             stack_idx++;
             //printSudoku(sudoku, stdout, 1);
         }
