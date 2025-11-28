@@ -36,6 +36,7 @@ int main(const int argc, char** argv) {
         id++;
     if (err < 0) {
         printGetNextSudokuErrorMessage(err);
+        free(sudokus);
         fclose(parser.inputFile);
         fclose(outputFile);
         return 1;
@@ -52,16 +53,26 @@ int main(const int argc, char** argv) {
     }
     else if (parser.method == 'g') {
         if (gpu_main(sudokus, parser.totalSudokuCount) <= 0) {
-            for (int i = 0; i < parser.totalSudokuCount; i++) {
-                if (validateSudokuSolution(&sudokus[i]) < 0) {
-                    printf("Invalid solution for %d!\n", i);
-                    printSudoku(&sudokus[i], stdout, 1);
-                }
-            }
+            // for (int i = 0; i < parser.totalSudokuCount; i++) {
+            //     if (validateSudokuSolution(&sudokus[i]) < 0) {
+            //         printf("Invalid solution for %d!\n", i);
+            //         printSudoku(&sudokus[i], stdout, 1);
+            //     }
+            // }
+        }
+        else {
+            free(sudokus);
+            fclose(parser.inputFile);
+            fclose(outputFile);
+            return 1;
         }
     }
     else {
         puts("Invalid parser method!\n");
+        free(sudokus);
+        fclose(parser.inputFile);
+        fclose(outputFile);
+        return 1;
     }
 
     for (int i = 0; i < parser.totalSudokuCount; i++) {

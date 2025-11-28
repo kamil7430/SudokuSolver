@@ -9,14 +9,16 @@
 #include <cuda_runtime.h>
 
 __global__ void oneBlockOneSudokuKernel(Sudoku *sudokus, Sudoku* outSudoku, int* preprocessedSudokusCount) {
-    __shared__ volatile int foundSolution;
+    __shared__ int foundSolution;
 
+    // Initialize the shared variable by the first thread
     if (threadIdx.x == 0) {
         foundSolution = 0;
     }
     __syncthreads();
 
-    const int threadNumber = blockDim.x * blockIdx.x + threadIdx.x;
+    // Early return of threads that don't have any work to do
+    const unsigned int threadNumber = blockDim.x * blockIdx.x + threadIdx.x;
     if (threadIdx.x >= preprocessedSudokusCount[blockIdx.x])
         return;
     Sudoku sudoku = sudokus[threadNumber];
@@ -38,7 +40,7 @@ __global__ void oneBlockOneSudokuKernel(Sudoku *sudokus, Sudoku* outSudoku, int*
             for (int i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
                 for (int j = 0; j < SUDOKU_DIMENSION_SIZE; j++) {
                     if (getDigitAt(&sudoku, i, j) == 0) {
-                        int possibleDigits = __popc(getPossibleDigitsAt(&sudoku, i, j));
+                        const int possibleDigits = __popc(getPossibleDigitsAt(&sudoku, i, j));
                         if (possibleDigits < minPossibleDigits) {
                             minPossibleDigits = possibleDigits;
                             row = i;
@@ -59,7 +61,7 @@ __global__ void oneBlockOneSudokuKernel(Sudoku *sudokus, Sudoku* outSudoku, int*
         }
 
         // Clean up previous iteration (if occurred)
-        uint8_t previousDigit = getDigitAt(&sudoku, row, col);
+        const uint8_t previousDigit = getDigitAt(&sudoku, row, col);
         if (previousDigit != 0)
             removeDigitAndUpdateUsedDigits(&sudoku, row, col, previousDigit);
 
@@ -79,20 +81,21 @@ __global__ void oneBlockOneSudokuKernel(Sudoku *sudokus, Sudoku* outSudoku, int*
             const int digit = previousDigit + shift;
             setDigitAndUpdateUsedDigits(&sudoku, row, col, digit);
             stack_idx++;
-            //printSudoku(sudoku, stdout, 1);
         }
     } while (stack_idx >= 0);
 
-    // If sudoku is invalid, return an empty sudoku
+    // Check if the solution was found and if it was - change flag to inform other threads that they should leave
+    // and save the solution
     if (stack_idx > 0) {
         if (foundSolution)
             return;
-        foundSolution = 1;
 
-        outSudoku[blockIdx.x] = sudoku;
+        const int oldVal = atomicExch(&foundSolution, 1);
+
+        if (oldVal == 0) {
+            outSudoku[blockIdx.x] = sudoku;
+        }
     }
-
-    // printf("Thread #%d finished!\n", threadNumber);
 }
 
 #endif //SUDOKUSOLVERCUDA_GPU_SOLVER_CUH

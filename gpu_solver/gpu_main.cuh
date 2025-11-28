@@ -9,12 +9,14 @@
 #include <time.h>
 
 void performFirstFewStepsOfRecursion(Sudoku* sudoku, Sudoku* outSudoku, int depth, int i, int j, int* offset) {
+    // If depth of 3 is reached, finish the recursion and save the board
     if (depth == 3) {
         outSudoku[*offset] = *sudoku;
         (*offset)++;
         return;
     }
 
+    // Look for a cell with the lowest number of possible digits
     int minPossibleDigits = 10;
     int row = 0, col = 0;
     for (i = 0; i < SUDOKU_DIMENSION_SIZE; i++) {
@@ -32,6 +34,7 @@ void performFirstFewStepsOfRecursion(Sudoku* sudoku, Sudoku* outSudoku, int dept
 
     uint16_t digitsMask = getPossibleDigitsAt(sudoku, row, col);
 
+    // Make recursive calls for all possible digits
     int digit = 0;
     while (digitsMask > 0) {
         const int shift = __builtin_ffs(digitsMask);
@@ -45,7 +48,7 @@ void performFirstFewStepsOfRecursion(Sudoku* sudoku, Sudoku* outSudoku, int dept
 }
 
 int gpu_main(Sudoku* sudokus, const int sudokuCount) {
-    clock_t preprocessingStart = clock();
+    const clock_t preprocessingStart = clock();
 
     for (int i = 0; i < sudokuCount; i++) {
         cpuPreprocessSudoku(&sudokus[i]);
@@ -59,30 +62,27 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
     constexpr int threadsPerBlock = 256;
     const int blocks = sudokuCount;
 
-    // Allocate the device input sudokus
+    // Count the size of memory to allocate and declare pointers to device memory
     const unsigned int output_sudokus_size = sudokuCount * sizeof(Sudoku);
     const unsigned int input_sudokus_size = output_sudokus_size * threadsPerBlock;
     Sudoku* device_input_sudokus;
     Sudoku* device_output_sudokus;
     int* device_preprocessed_sudokus_count;
 
-    const int psc_size = sudokuCount * sizeof(int);
+    // Split every sudoku board by taking first few steps of algorithm
+    const unsigned int psc_size = sudokuCount * sizeof(int);
     Sudoku* preprocessed_sudokus = (Sudoku*)malloc(input_sudokus_size);
     int* preprocessed_sudokus_count = (int*)malloc(psc_size);
     for (int i = 0; i < sudokuCount; i++) {
         preprocessed_sudokus_count[i] = 0;
         performFirstFewStepsOfRecursion(&sudokus[i], preprocessed_sudokus + i * threadsPerBlock, 0, 0, 0, &preprocessed_sudokus_count[i]);
-        // printf("%d\n", preprocessed_sudokus_count[i]);
-        // for (int j = 0; j < preprocessed_sudokus_count[i]; j++) {
-        //     printSudoku(preprocessed_sudokus + i * threadsPerBlock + j, stdout, 1);
-        //     putc('\n', stdout);
-        // }
     }
 
-    clock_t preprocessingEnd = clock();
+    const clock_t preprocessingEnd = clock();
     printf("CPU preprocessing time: %f s\n", (float)(preprocessingEnd - preprocessingStart) / CLOCKS_PER_SEC);
-    clock_t copyingToDeviceStart = clock();
+    const clock_t copyingToDeviceStart = clock();
 
+    // Allocate memory on the device
     err = cudaMalloc((void **)&device_input_sudokus, input_sudokus_size);
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to allocate device input sudokus (error code %s)!\n", cudaGetErrorString(err));
@@ -115,9 +115,10 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
         return 1;
     }
 
-    clock_t copyingToDeviceEnd = clock();
+    const clock_t copyingToDeviceEnd = clock();
     printf("Copying to GPU time: %f s\n", (float)(copyingToDeviceEnd - copyingToDeviceStart) / CLOCKS_PER_SEC);
 
+    // Initialize CUDA timers
     cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -150,8 +151,7 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
         return 1;
     }
 
-    // Copy the device result sudokus in device memory to the host result sudokus
-    // in host memory.
+    // Copy the device result sudokus in device memory to the host result sudokus in host memory.
     printf("Copy output data from the CUDA device to the host memory\n");
     err = cudaMemcpy(sudokus, device_output_sudokus, output_sudokus_size, cudaMemcpyDeviceToHost);
     if (err != cudaSuccess) {
@@ -178,6 +178,7 @@ int gpu_main(Sudoku* sudokus, const int sudokuCount) {
         return 1;
     }
 
+    // Free host memory
     free(preprocessed_sudokus);
     free(preprocessed_sudokus_count);
 
