@@ -24,6 +24,7 @@ Every Sudoku board is represented as a 81-char line followed by CR+LF symbols (W
 ```
 000400560010506090000097300009020040600005000000370000502000000063000000000960800
 ```
+There is an example dataset in the repository - `sudoku_data.csv`.
 
 ## Usage
 
