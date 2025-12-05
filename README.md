@@ -26,6 +26,10 @@ Every Sudoku board is represented as a 81-char line followed by CR+LF symbols (W
 ```
 There is an example dataset in the repository - `sudoku_data.csv`.
 
+## Output
+
+The format of Sudoku board is the same as above. If the input Sudoku board is valid, the corresponding line in output file will be filled with solved Sudoku board. Otherwise, there will be a line filled with 81 zeros.
+
 ## Usage
 
 ```
@@ -33,4 +37,6 @@ There is an example dataset in the repository - `sudoku_data.csv`.
 ```
 Where:
 - `method` is `gpu` or `cpu`
-- `count` is count of sudoku boards to load from file
+- `count` is count of Sudoku boards to load from file
+- `input_file` is a file (or path to file) containing Sudoku boards to solve
+- `output_file` is a file (or path to file) to write output (if file exists, it will be overwritten)
